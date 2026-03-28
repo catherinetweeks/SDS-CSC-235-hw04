@@ -1,5 +1,7 @@
 // Resources Used:
 // 1) https://d3-graph-gallery.com/graph/backgroundmap_basic.html, 
+// 2) https://d3js.org/d3-force/collide,
+// 3)
 
 //const { percent } = require("motion");
 
@@ -80,36 +82,40 @@ d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/w
 
     const languagePoints = [];
 
-    const jitterAmount = 7;
-
     countries.forEach(c => {
         if (!c.coords) return;
 
         c.languages.forEach(lang => {
+            const r = lang.Percentage / 20 + 1;
+
             languagePoints.push({
                 country: c.Name,
                 language: lang.Language,
-
-                // add jitter so we can see multiple languages in same country
-                coords: [
-                    c.coords[0] + (Math.random() - 0.5) * jitterAmount,
-                    c.coords[1] + (Math.random() - 0.5) * jitterAmount
-                ],
+                x: c.coords[0],
+                y: c.coords[1],
+                r: r,
                 official: lang.IsOfficial,
-                percentspeaker: lang.Percentage,
-                numberspeaker: lang.Percentage * c.Population / 100
+                percentspeaker: lang.Percentage
             });
         });
     });
+
+    // prevent circles from overlapping by using a force simulation to adjust the x and y coordinates 
+    const simulation = d3.forceSimulation(languagePoints)
+    .force("x", d3.forceX(d => d.x).strength(0.5))
+    .force("y", d3.forceY(d => d.y).strength(0.5))
+    .force("collide", d3.forceCollide(d => d.r + 1)) // +1 = padding
+    .stop();
+
+    for (let i = 0; i < 120; i++) simulation.tick();
 
     mapGroup
         .selectAll("circle")
         .data(languagePoints)
         .join("circle")
-        .attr("cx", d => d.coords[0])
-        .attr("cy", d => d.coords[1])
-        .attr("r", d => d.percentspeaker / 15)
-        // change fill color based on whether or not the language is official
+        .attr("cx", d => d.x)
+        .attr("cy", d => d.y)
+        .attr("r", d => d.r)
         .attr("fill", d => d.official === "F" ? "red" : "green")
         .attr("fill-opacity", 1);
 });
