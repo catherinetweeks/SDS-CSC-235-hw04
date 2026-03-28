@@ -25,6 +25,8 @@ const mapGroup = svg.append("g");
 // Create zoom behavior
 const zoom = d3.zoom()
     .scaleExtent([1,8])
+    // limit panning to bounds of the map with a little wiggle room.
+    .translateExtent([[-100,-100], [width + 100, height + 100]])
     .on("zoom", function(event) {
         mapGroup.attr("transform", event.transform);
     });
@@ -125,7 +127,7 @@ d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/w
     const projected = projection(initialCoords);
 
     // iniital zoom scale
-    const initialScale = 5;
+    const initialScale = 2;
     const transform = d3.zoomIdentity
         .translate(
             width / 2 - projected[0] * initialScale,
