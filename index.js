@@ -1,6 +1,8 @@
 // Resources Used:
 // 1) https://d3-graph-gallery.com/graph/backgroundmap_basic.html, 
 
+//const { percent } = require("motion");
+
 
 // The svg
 const svg = d3.select("#map");
@@ -30,16 +32,75 @@ svg.call(zoom);
 
 // Load data
 d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson")
-  .then(function(data) {
+  .then(function(world) {
     // append to svg
       mapGroup
         .selectAll("path")
-        .data(data.features)
+        .data(world.features)
         .join("path")
             .attr("d", path)
             .attr("fill", "#e2e2e2")
             .attr("stroke", "#fff")
             .attr("stroke-width", 0.2);
+    // Load CSVs 
+    Promise.all([
+    d3.csv("country.csv"),
+    d3.csv("countrylanguage.csv")
+]).then(function([countries, languages]) {
+
+    const languagesByCountry = d3.group(languages, d => d.CountryCode);
+
+    // match country code to countries
+    countries.forEach(c => {
+        c.languages = languagesByCountry.get(c.Code) || [];
+    });
+
+    // create map to get coordinates
+    const geoById = new Map(
+        world.features.map(d => [d.id, d])
+    );
+
+    countries.forEach(c => {
+        const geo = geoById.get(c.Code);
+        if (geo) {
+            c.coords = path.centroid(geo);
+        }
+    });
+
+    const languagePoints = [];
+
+    const jitterAmount = 7;
+
+    countries.forEach(c => {
+        if (!c.coords) return;
+
+        c.languages.forEach(lang => {
+            languagePoints.push({
+                country: c.Name,
+                language: lang.Language,
+
+                // add jitter so we can see multiple languages in same country
+                coords: [
+                    c.coords[0] + (Math.random() - 0.5) * jitterAmount,
+                    c.coords[1] + (Math.random() - 0.5) * jitterAmount
+                ],
+                official: lang.IsOfficial,
+                percentspeaker: lang.Percentage,
+                numberspeaker: lang.Percentage * c.Population / 100
+            });
+        });
+    });
+
+    mapGroup
+        .selectAll("circle")
+        .data(languagePoints)
+        .join("circle")
+        .attr("cx", d => d.coords[0])
+        .attr("cy", d => d.coords[1])
+        .attr("r", d => d.percentspeaker / 10)
+        // change fill color based on whether or not the language is official
+        .attr("fill", d => d.official === "F" ? "red" : "green");
+});
 
     // initial zoom location
     const initialCoords = [20, 46];
