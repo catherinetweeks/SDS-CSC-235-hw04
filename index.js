@@ -62,9 +62,9 @@ d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/w
 
     // manual coordinate overrides for france specifically (they took colonialism to an extreme)
     const manualCoords = {
-        "FRA": [2.2137, 46.2276], // France (center of mainland)
-        "USA": [-98.5795, 39.8283], // US (optional, common fix)
-        "NOR": [8.4689, 60.4720] // Norway example
+        "FRA": [2.2137, 46.2276],
+        "USA": [-98.5795, 39.8283],
+        "NOR": [8.4689, 60.4720]
     };
 
     countries.forEach(c => {
