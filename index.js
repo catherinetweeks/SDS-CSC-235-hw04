@@ -60,10 +60,21 @@ d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/w
         world.features.map(d => [d.id, d])
     );
 
+    // manual coordinate overrides for france specifically (they took colonialism to an extreme)
+    const manualCoords = {
+        "FRA": [2.2137, 46.2276], // France (center of mainland)
+        "USA": [-98.5795, 39.8283], // US (optional, common fix)
+        "NOR": [8.4689, 60.4720] // Norway example
+    };
+
     countries.forEach(c => {
         const geo = geoById.get(c.Code);
         if (geo) {
-            c.coords = path.centroid(geo);
+            if (manualCoords[c.Code]) {
+                c.coords = projection(manualCoords[c.Code]); // convert lon/lat → screen coords
+            } else {
+                c.coords = path.centroid(geo);
+            };
         }
     });
 
@@ -97,9 +108,10 @@ d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/w
         .join("circle")
         .attr("cx", d => d.coords[0])
         .attr("cy", d => d.coords[1])
-        .attr("r", d => d.percentspeaker / 10)
+        .attr("r", d => d.percentspeaker / 15)
         // change fill color based on whether or not the language is official
-        .attr("fill", d => d.official === "F" ? "red" : "green");
+        .attr("fill", d => d.official === "F" ? "red" : "green")
+        .attr("fill-opacity", 1);
 });
 
     // initial zoom location
@@ -110,7 +122,7 @@ d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/w
     const initialScale = 5;
     const transform = d3.zoomIdentity
         .translate(
-            width/2 - projected[0] * initialScale,
+            width / 2 - projected[0] * initialScale,
             height / 2 - projected[1] * initialScale
             )
         .scale(initialScale);
