@@ -37,10 +37,8 @@ const popup = d3.select("body")
     .attr("id", "popup")
     .style("position", "absolute")
     .style("background", "white")
-    .style("padding", "10px")
-    .style("border", "1px solid #ccc")
-    .style("border-radius", "5px")
-    .style("pointer-events", "none")
+    .style("padding", "15px")
+    .style("border-radius", "8px")
     .style("opacity", 0);
 
 //Call zoom
@@ -165,52 +163,53 @@ d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/w
 function showBarChart(event, d) {
     const data = d.allLanguages.map(l => ({
         language: l.Language,
-        value: +l.Percentage
+        value: +l.Percentage,
+        official: l.IsOfficial
     }));
+    data.sort((a, b) => b.value - a.value);
 
     // Clear any previous popup content
     popup.html("");
 
-    const width = 250;
-    const height = 150;
-    const margin = { top: 20, right: 10, bottom: 40, left: 40 };
+    const width = 350;
+    const height = 250;
+    const margin = { top: 20, right: 10, bottom: 40, left: 70 };
 
     const svgPopup = popup.append("svg")
         .attr("width", width)
         .attr("height", height);
 
-    const x = d3.scaleBand()
+    const y = d3.scaleBand()
         .domain(data.map(d => d.language))
-        .range([margin.left, width - margin.right])
+        .range([margin.top, height - margin.bottom])
         .padding(0.2);
 
-    const y = d3.scaleLinear()
+    const x = d3.scaleLinear()
         .domain([0, d3.max(data, d => d.value)])
         .nice()
-        .range([height - margin.bottom, margin.top]);
+        .range([margin.left, width - margin.right]);
 
     // Bars
     svgPopup.selectAll("rect")
         .data(data)
         .join("rect")
-        .attr("x", d => x(d.language))
-        .attr("y", d => y(d.value))
-        .attr("width", x.bandwidth())
-        .attr("height", d => y(0) - y(d.value))
-        .attr("fill", "steelblue");
+        .attr("x", margin.left)
+        .attr("y", d => y(d.language))
+        .attr("width", d => x(d.value) - margin.left)
+        .attr("height", y.bandwidth())
+        .attr("fill", d => d.official === "F" ? "red" : "green")
 
     // X axis
     svgPopup.append("g")
         .attr("transform", `translate(0,${height - margin.bottom})`)
-        .call(d3.axisBottom(x))
-        .selectAll("text")
-        .attr("transform", "rotate(-40)")
-        .style("text-anchor", "end");
+        .call(d3.axisBottom(x).ticks(5).tickSize(0))
+        .call(g => g.select(".domain").remove());
 
     // Y axis
     svgPopup.append("g")
         .attr("transform", `translate(${margin.left},0)`)
-        .call(d3.axisLeft(y));
+        .call(d3.axisLeft(y).tickSize(0))
+        .call(g => g.select(".domain").remove());
 
     // Title
     svgPopup.append("text")
@@ -220,8 +219,10 @@ function showBarChart(event, d) {
         .text(d.country);
 
     // Show popup
+    const rect = svg.node().getBoundingClientRect();
+
     popup
-        .style("left", (event.pageX + 10) + "px")
-        .style("top", (event.pageY - 20) + "px")
+        .style("left", (rect.left + width / 2 - 150) + "px")
+        .style("top", (rect.top + height / 2 - 100) + "px")
         .style("opacity", 1);
 }
