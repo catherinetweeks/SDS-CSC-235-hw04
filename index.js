@@ -2,9 +2,7 @@
 // 1) https://d3-graph-gallery.com/graph/backgroundmap_basic.html, 
 // 2) https://d3js.org/d3-force/collide,
 // 3) https://stackoverflow.com/questions/46005546/d3-v4-get-current-zoom-scale
-
-//const { percent } = require("motion");
-
+// 4) https://richardbrath.wordpress.com/2018/11/24/using-font-attributes-with-d3-js/
 
 // The svg
 const svg = d3.select("#map");
@@ -39,7 +37,32 @@ const popup = d3.select("body")
     .style("background", "white")
     .style("padding", "15px")
     .style("border-radius", "8px")
-    .style("opacity", 0);
+    .style("opacity", 0)
+    .style("z-index", 10);
+
+// Create tooltip
+const tooltip = d3.select("body")
+    .append("div")
+    .style("position", "absolute")
+    .style("background", "#000000")
+    .style("color", "white")
+    .style("font-family", "sans-serif")
+    .style("padding", "5px 8px")
+    .style("border-radius", "4px")
+    .style("font-size", "12px")
+    .style("pointer-events", "none")
+    .style("opacity", 0)
+    .style("z-index", 10);
+
+// make an overlay to dim the map when the pop up is active
+const overlay = d3.select("body")
+    .append("div")
+    .attr("id", "overlay")
+    .style("position", "absolute")
+    .style("background", "rgba(0,0,0,0.4)")
+    .style("opacity", 0)
+    .style("pointer-events", "none")
+    .style("z-index", 5);
 
 //Call zoom
 svg.call(zoom);
@@ -47,7 +70,13 @@ svg.call(zoom);
 // Make it so pop up disappears when you click anywhere on the map
 svg.on("click", function(event) {
     if (event.target.tagName !== "circle") {
-        popup.style("opacity", 0);
+        popup
+            .style("opacity", 0)
+            .style("pointer-events", "none"); // disable blocking of map interaction when popup is not active
+
+        overlay
+            .style("opacity", 0)
+            .style("pointer-events", "none");
     }
 });
 
@@ -161,6 +190,23 @@ d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/w
 
 // Add pop up bar chart
 function showBarChart(event, d) {
+    const newrect = svg.node().getBoundingClientRect();
+
+    overlay
+        .style("left", newrect.left + "px")
+        .style("top", newrect.top + "px")
+        .style("width", newrect.width + "px")
+        .style("height", newrect.height + "px")
+        .style("opacity", 1)
+        .style("pointer-events", "all")
+        .style("z-index", 5) // blocks map interaction
+        .on("click", function() {
+            popup.style("opacity", 0)
+                .style("pointer-events", "none"); // disable blocking of map interaction when popup is not active
+            overlay.style("opacity", 0)
+                .style("pointer-events", "none");
+});
+
     const data = d.allLanguages.map(l => ({
         language: l.Language,
         value: +l.Percentage,
@@ -171,23 +217,25 @@ function showBarChart(event, d) {
     // Clear any previous popup content
     popup.html("");
 
-    const width = 350;
-    const height = 250;
+    const popupWidth = 350;
+    const popupHeight = 250;
     const margin = { top: 20, right: 10, bottom: 40, left: 70 };
 
+
     const svgPopup = popup.append("svg")
-        .attr("width", width)
-        .attr("height", height);
+        .attr("width", popupWidth)
+        .attr("height", popupHeight)
+        .style("z-index", 10);
 
     const y = d3.scaleBand()
         .domain(data.map(d => d.language))
-        .range([margin.top, height - margin.bottom])
+        .range([margin.top, popupHeight - margin.bottom])
         .padding(0.2);
 
     const x = d3.scaleLinear()
         .domain([0, d3.max(data, d => d.value)])
         .nice()
-        .range([margin.left, width - margin.right]);
+        .range([margin.left, popupWidth - margin.right]);
 
     // Bars
     svgPopup.selectAll("rect")
@@ -198,10 +246,28 @@ function showBarChart(event, d) {
         .attr("width", d => x(d.value) - margin.left)
         .attr("height", y.bandwidth())
         .attr("fill", d => d.official === "F" ? "red" : "green")
+        .on("mouseover", function(event, d) {
+            tooltip
+                .style("opacity", 1)
+                .html(`${d.language}: ${d.value}%`);
+        })
+        .on("mousemove", function(event) {
+            tooltip
+                .style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 20) + "px");
+        })
+        .on("mouseout", function() {
+            tooltip.style("opacity", 0);
+        })
+        // add a little animation for funsies
+        .attr("width", 0)
+        .transition()
+        .duration(600)
+        .attr("width", d => x(d.value) - margin.left);
 
     // X axis
     svgPopup.append("g")
-        .attr("transform", `translate(0,${height - margin.bottom})`)
+        .attr("transform", `translate(0,${popupHeight - margin.bottom})`)
         .call(d3.axisBottom(x).ticks(5).tickSize(0))
         .call(g => g.select(".domain").remove());
 
@@ -213,16 +279,18 @@ function showBarChart(event, d) {
 
     // Title
     svgPopup.append("text")
-        .attr("x", width / 2)
+        .attr("x", popupWidth / 2)
         .attr("y", 15)
         .attr("text-anchor", "middle")
+        .attr("font-family", "sans-serif")
         .text(d.country);
 
     // Show popup
     const rect = svg.node().getBoundingClientRect();
 
     popup
-        .style("left", (rect.left + width / 2 - 150) + "px")
-        .style("top", (rect.top + height / 2 - 100) + "px")
-        .style("opacity", 1);
+        .style("left", (rect.left + (rect.width / 2) - (popupWidth / 2)) + "px")
+        .style("top", (rect.top + (rect.height / 2) - (popupHeight / 2)) + "px")
+        .style("opacity", 1)
+        .style("pointer-events", "all");
 }
