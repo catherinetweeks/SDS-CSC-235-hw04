@@ -24,7 +24,7 @@ const mapGroup = svg.append("g");
 const zoom = d3.zoom()
     .scaleExtent([1,8])
     // limit panning to bounds of the map with a little wiggle room.
-    .translateExtent([[-100,-100], [width + 100, height + 100]])
+    .translateExtent([[-200,-200], [width + 200, height + 200]])
     .on("zoom", function(event) {
         mapGroup.attr("transform", event.transform);
     });
@@ -81,7 +81,7 @@ const overlay = d3.select("body")
 
 // make legend
 const legend = svg.append("g")
-    .attr("transform", `translate(${width - 200}, ${height - 120})`);
+    .attr("transform", `translate(${width - 170}, ${height - height + 10})`);
 
 //Call zoom
 svg.call(zoom);
@@ -206,8 +206,8 @@ d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/w
         });
 
     legend.append("rect")
-    .attr("width", 180)
-    .attr("height", 100)
+    .attr("width", 160)
+    .attr("height", 120)
     .attr("fill", "white")
     .attr("rx", 8);
 
@@ -222,6 +222,7 @@ d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/w
         .attr("x", 30)
         .attr("y", 20)
         .text("Unofficial language")
+        .attr("font-weight", "bold")
         .attr("font-size", "12px")
         .attr("alignment-baseline", "middle")
         .attr("font-family", "sans-serif");
@@ -238,6 +239,7 @@ d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/w
         .attr("y", 40)
         .text("Official language")
         .attr("font-size", "12px")
+        .attr("font-weight", "bold")
         .attr("alignment-baseline", "middle")
         .attr("font-family", "sans-serif");
 
