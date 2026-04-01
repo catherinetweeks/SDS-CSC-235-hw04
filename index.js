@@ -79,6 +79,10 @@ const overlay = d3.select("body")
     .style("pointer-events", "none")
     .style("z-index", 5);
 
+// make legend
+const legend = svg.append("g")
+    .attr("transform", `translate(${width - 200}, ${height - 120})`);
+
 //Call zoom
 svg.call(zoom);
 
@@ -163,6 +167,7 @@ d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/w
                 percentspeaker: lang.Percentage
             });
         });
+        
     });
 
     // prevent circles from overlapping by using a force simulation to adjust the x and y coordinates 
@@ -199,7 +204,68 @@ d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/w
         .on("mouseout", function() {
             tooltip.style("opacity", 0);
         });
-});
+
+    legend.append("rect")
+    .attr("width", 180)
+    .attr("height", 100)
+    .attr("fill", "white")
+    .attr("rx", 8);
+
+    // Unofficial (red)
+    legend.append("circle")
+        .attr("cx", 15)
+        .attr("cy", 20)
+        .attr("r", 6)
+        .attr("fill", "red");
+
+    legend.append("text")
+        .attr("x", 30)
+        .attr("y", 20)
+        .text("Unofficial language")
+        .attr("font-size", "12px")
+        .attr("alignment-baseline", "middle")
+        .attr("font-family", "sans-serif");
+
+    // Official (green)
+    legend.append("circle")
+        .attr("cx", 15)
+        .attr("cy", 40)
+        .attr("r", 6)
+        .attr("fill", "green");
+
+    legend.append("text")
+        .attr("x", 30)
+        .attr("y", 40)
+        .text("Official language")
+        .attr("font-size", "12px")
+        .attr("alignment-baseline", "middle")
+        .attr("font-family", "sans-serif");
+
+    const sizeValues = [10, 50, 100];
+
+    const sizeScale = d => d / 20 + 1;
+
+    legend.selectAll(".size-circle")
+        .data(sizeValues)
+        .join("circle")
+        .attr("class", "size-circle")
+        .attr("cx", 20)
+        .attr("cy", (d, i) => 65 + i * 20)
+        .attr("r", d => sizeScale(d))
+        .attr("fill", "none")
+        .attr("stroke", "black");
+        
+    legend.selectAll(".size-text")
+        .data(sizeValues)
+        .join("text")
+        .attr("class", "size-text")
+        .attr("x", 35)
+        .attr("y", (d, i) => 65 + i * 20)
+        .text(d => `${d}% speakers`)
+        .attr("font-size", "12px")
+        .attr("alignment-baseline", "middle")
+        .attr("font-family", "sans-serif");
+    });
 
     // initial zoom location
     const initialCoords = [20, 46];
