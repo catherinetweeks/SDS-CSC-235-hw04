@@ -31,8 +31,27 @@ const zoom = d3.zoom()
         mapGroup.attr("transform", event.transform);
     });
 
+// Creat pop-up container
+const popup = d3.select("body")
+    .append("div")
+    .attr("id", "popup")
+    .style("position", "absolute")
+    .style("background", "white")
+    .style("padding", "10px")
+    .style("border", "1px solid #ccc")
+    .style("border-radius", "5px")
+    .style("pointer-events", "none")
+    .style("opacity", 0);
+
 //Call zoom
 svg.call(zoom);
+
+// Make it so pop up disappears when you click anywhere on the map
+svg.on("click", function(event) {
+    if (event.target.tagName !== "circle") {
+        popup.style("opacity", 0);
+    }
+});
 
 // Load data
 d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson")
@@ -92,6 +111,8 @@ d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/w
 
             languagePoints.push({
                 country: c.Name,
+                countryCode: c.Code,
+                allLanguages: c.languages,
                 language: lang.Language,
                 x: c.coords[0],
                 y: c.coords[1],
@@ -119,7 +140,10 @@ d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/w
         .attr("cy", d => d.y)
         .attr("r", d => d.r)
         .attr("fill", d => d.official === "F" ? "red" : "green")
-        .attr("fill-opacity", 1);
+        .attr("fill-opacity", 1)
+        .on("click", function(event, d) {
+            showBarChart(event, d);
+        });
 });
 
     // initial zoom location
@@ -136,3 +160,68 @@ d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/w
         .scale(initialScale);
     svg.call(zoom.transform, transform)
 });
+
+// Add pop up bar chart
+function showBarChart(event, d) {
+    const data = d.allLanguages.map(l => ({
+        language: l.Language,
+        value: +l.Percentage
+    }));
+
+    // Clear any previous popup content
+    popup.html("");
+
+    const width = 250;
+    const height = 150;
+    const margin = { top: 20, right: 10, bottom: 40, left: 40 };
+
+    const svgPopup = popup.append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+    const x = d3.scaleBand()
+        .domain(data.map(d => d.language))
+        .range([margin.left, width - margin.right])
+        .padding(0.2);
+
+    const y = d3.scaleLinear()
+        .domain([0, d3.max(data, d => d.value)])
+        .nice()
+        .range([height - margin.bottom, margin.top]);
+
+    // Bars
+    svgPopup.selectAll("rect")
+        .data(data)
+        .join("rect")
+        .attr("x", d => x(d.language))
+        .attr("y", d => y(d.value))
+        .attr("width", x.bandwidth())
+        .attr("height", d => y(0) - y(d.value))
+        .attr("fill", "steelblue");
+
+    // X axis
+    svgPopup.append("g")
+        .attr("transform", `translate(0,${height - margin.bottom})`)
+        .call(d3.axisBottom(x))
+        .selectAll("text")
+        .attr("transform", "rotate(-40)")
+        .style("text-anchor", "end");
+
+    // Y axis
+    svgPopup.append("g")
+        .attr("transform", `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y));
+
+    // Title
+    svgPopup.append("text")
+        .attr("x", width / 2)
+        .attr("y", 15)
+        .attr("text-anchor", "middle")
+        .text(d.country);
+
+    // Show popup
+    popup
+        .style("left", (event.pageX + 10) + "px")
+        .style("top", (event.pageY - 20) + "px")
+        .style("opacity", 1);
+}
