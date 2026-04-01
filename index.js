@@ -40,7 +40,7 @@ const popup = d3.select("body")
     .style("opacity", 0)
     .style("z-index", 10);
 
-// Create tooltip
+// Create tooltip for bar chart
 const tooltip = d3.select("body")
     .append("div")
     .style("position", "absolute")
@@ -54,12 +54,27 @@ const tooltip = d3.select("body")
     .style("opacity", 0)
     .style("z-index", 10);
 
+// create tooltip for map
+const langtip = d3.select("body")
+    .append("div")
+    .style("position", "absolute")
+    .style("background", "#000000")
+    .style("color", "white")
+    .style("font-family", "sans-serif")
+    .style("padding", "5px 8px")
+    .style("border-radius", "4px")
+    .style("font-size", "12px")
+    .style("pointer-events", "none")
+    .style("opacity", 0)
+    .style("z-index", 10);
+
+
 // make an overlay to dim the map when the pop up is active
 const overlay = d3.select("body")
     .append("div")
     .attr("id", "overlay")
     .style("position", "absolute")
-    .style("background", "rgba(0,0,0,0.4)")
+    .style("background", "rgba(0,0,0,0.2)")
     .style("opacity", 0)
     .style("pointer-events", "none")
     .style("z-index", 5);
@@ -170,6 +185,19 @@ d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/w
         .attr("fill-opacity", 1)
         .on("click", function(event, d) {
             showBarChart(event, d);
+        })
+                .on("mouseover", function(event, d) {
+            tooltip
+                .style("opacity", 1)
+                .html(`${d.language}`);
+        })
+        .on("mousemove", function(event) {
+            tooltip
+                .style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 20) + "px");
+        })
+        .on("mouseout", function() {
+            tooltip.style("opacity", 0);
         });
 });
 
