@@ -84,6 +84,32 @@ const overlay = d3.select("body")
 const legend = svg.append("g")
     .attr("transform", `translate(${width - 170}, ${height - height + 10})`);
 
+// make buttons to zoom in and out
+const zoomControls = d3.select("body")
+    .append("div")
+    .style("position", "absolute")
+    .style("right", "20px")
+    .style("bottom", "20px");
+
+zoomControls.append("button")
+    .text("+")
+    .on("click", () => {
+        svg.transition().call(zoom.scaleBy, 1.5);
+    });
+
+zoomControls.append("button")
+    .text("−")
+    .on("click", () => {
+        svg.transition().call(zoom.scaleBy, 0.75);
+    });
+
+zoomControls.selectAll("button")
+    .style("display", "block")
+    .style("margin", "5px")
+    .style("width", "30px")
+    .style("height", "30px")
+    .style("font-size", "18px");
+
 //Call zoom
 svg.call(zoom);
 
