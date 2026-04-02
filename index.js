@@ -4,6 +4,7 @@
 // 3) https://stackoverflow.com/questions/46005546/d3-v4-get-current-zoom-scale
 // 4) https://richardbrath.wordpress.com/2018/11/24/using-font-attributes-with-d3-js/
 // 5) https://stackoverflow.com/questions/24784302/wrapping-text-in-d3
+// 6) https://d3js.org/d3-transition 
 
 // The svg
 const svg = d3.select("#map");
