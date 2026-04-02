@@ -3,6 +3,7 @@
 // 2) https://d3js.org/d3-force/collide,
 // 3) https://stackoverflow.com/questions/46005546/d3-v4-get-current-zoom-scale
 // 4) https://richardbrath.wordpress.com/2018/11/24/using-font-attributes-with-d3-js/
+// 5) https://stackoverflow.com/questions/24784302/wrapping-text-in-d3
 
 // The svg
 const svg = d3.select("#map");
@@ -153,7 +154,7 @@ d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/w
         if (!c.coords) return;
 
         c.languages.forEach(lang => {
-            const r = lang.Percentage / 20 + 1;
+            const r = lang.Percentage / 35 + 0.5;
 
             languagePoints.push({
                 country: c.Name,
@@ -245,7 +246,7 @@ d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/w
 
     const sizeValues = [10, 50, 100];
 
-    const sizeScale = d => d / 20 + 1;
+    const sizeScale = d => d / 35 + 0.5;
 
     legend.selectAll(".size-circle")
         .data(sizeValues)
@@ -315,7 +316,7 @@ function showBarChart(event, d) {
 
     const popupWidth = 350;
     const popupHeight = 250;
-    const margin = { top: 20, right: 10, bottom: 40, left: 70 };
+    const margin = { top: 20, right: 10, bottom: 40, left: 75 };
 
 
     const svgPopup = popup.append("svg")
@@ -371,7 +372,7 @@ function showBarChart(event, d) {
     svgPopup.append("g")
         .attr("transform", `translate(${margin.left},0)`)
         .call(d3.axisLeft(y).tickSize(0))
-        .call(g => g.select(".domain").remove());
+        .call(g => g.select(".domain").remove())
 
     // Title
     svgPopup.append("text")
