@@ -6,23 +6,22 @@
 // 5) https://stackoverflow.com/questions/24784302/wrapping-text-in-d3
 // 6) https://d3js.org/d3-transition 
 
-// The svg
 const svg = d3.select("#map");
 // take the width and height from the svg element in the html file so I can adjust size in html instead of here.
 const width = +svg.attr("width");
 const height = +svg.attr("height");
 
-// Map and projection
+// map and projection
 const projection = d3.geoNaturalEarth1()
     .scale(width / 1.3 / Math.PI)
     .translate([width / 2, height / 2]);
 
 const path = d3.geoPath().projection(projection);
 
-// Create grouping for map for zoom feature
+// create grouping for map for zoom feature
 const mapGroup = svg.append("g");
 
-// Create zoom behavior
+// create zoom behavior using d3.zoom
 const zoom = d3.zoom()
     .scaleExtent([1,8])
     // limit panning to bounds of the map with a little wiggle room.
@@ -31,7 +30,7 @@ const zoom = d3.zoom()
         mapGroup.attr("transform", event.transform);
     });
 
-// Creat pop-up container
+// create pop-up container
 const popup = d3.select("body")
     .append("div")
     .attr("id", "popup")
@@ -42,7 +41,7 @@ const popup = d3.select("body")
     .style("opacity", 0)
     .style("z-index", 10);
 
-// Create tooltip for bar chart
+// create tooltip for bar chart
 const tooltip = d3.select("body")
     .append("div")
     .style("position", "absolute")
@@ -92,12 +91,14 @@ const zoomControls = d3.select("body")
     .style("right", "20px")
     .style("bottom", "20px");
 
+// zoom in button
 zoomControls.append("button")
     .text("+")
     .on("click", () => {
         svg.transition().call(zoom.scaleBy, 1.5);
     });
 
+// zoom out button
 zoomControls.append("button")
     .text("−")
     .on("click", () => {
@@ -111,10 +112,9 @@ zoomControls.selectAll("button")
     .style("height", "30px")
     .style("font-size", "18px");
 
-//Call zoom
 svg.call(zoom);
 
-// Make it so pop up disappears when you click anywhere on the map
+// make it so pop up disappears when you click anywhere on the map
 svg.on("click", function(event) {
     if (event.target.tagName !== "circle") {
         popup
@@ -129,7 +129,7 @@ svg.on("click", function(event) {
     }
 });
 
-// Load data
+// loading data
 d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson")
   .then(function(world) {
     // append to svg
@@ -141,7 +141,7 @@ d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/w
             .attr("fill", "#e2e2e2")
             .attr("stroke", "#fff")
             .attr("stroke-width", 0.2);
-    // Load CSVs 
+    // load csv 
     Promise.all([
     d3.csv("country.csv"),
     d3.csv("countrylanguage.csv")
@@ -176,7 +176,7 @@ d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/w
             };
         }
     });
-
+    // make langauge points using dataset
     const languagePoints = [];
 
     countries.forEach(c => {
@@ -200,6 +200,8 @@ d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/w
         
     });
 
+    let currentFilter = "all"; // "all", "official", "unofficial"
+
     // prevent circles from overlapping by using a force simulation to adjust the x and y coordinates 
     const simulation = d3.forceSimulation(languagePoints)
     .force("x", d3.forceX(d => d.x).strength(0.5))
@@ -213,6 +215,7 @@ d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/w
         .selectAll("circle")
         .data(languagePoints)
         .join("circle")
+        .attr("class", "lang-circle")
         .attr("cx", d => d.x)
         .attr("cy", d => d.y)
         .attr("r", d => d.r)
@@ -234,20 +237,41 @@ d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/w
         .on("mouseout", function() {
             tooltip.style("opacity", 0);
         });
+    
+    // add function to filter langauges based on their status by clicking the circles on the legend
+    function updateFilter() {
+        d3.selectAll(".lang-circle")
+            .style("opacity", d => {
+                if (currentFilter === "all") return 1;
 
+                if (currentFilter === "official") {
+                    return d.official === "T" ? 1 : 0;
+                }
+
+                if (currentFilter === "unofficial") {
+                    return d.official === "F" ? 1 : 0;
+                }
+            });
+    }
+    // make the legend background
     legend.append("rect")
     .attr("width", 160)
     .attr("height", 120)
     .attr("fill", "white")
-    .attr("rx", 8);
+    .attr("rx", 8); // round the corners
 
-    // Unofficial (red)
+    // unofficial (red)
     legend.append("circle")
         .attr("cx", 15)
         .attr("cy", 20)
         .attr("r", 6)
-        .attr("fill", "red");
-
+        .attr("fill", "red")
+        .style("cursor", "pointer")
+        .on("click", function() {
+            currentFilter = currentFilter === "unofficial" ? "all" : "unofficial";
+            updateFilter();
+    });
+    // add text for unofficial language in  legend
     legend.append("text")
         .attr("x", 30)
         .attr("y", 20)
@@ -257,13 +281,19 @@ d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/w
         .attr("alignment-baseline", "middle")
         .attr("font-family", "sans-serif");
 
-    // Official (green)
+    // official (green)
     legend.append("circle")
         .attr("cx", 15)
         .attr("cy", 40)
         .attr("r", 6)
-        .attr("fill", "green");
-
+        .attr("fill", "green")
+        .style("cursor", "pointer")
+        .on("click", function() {
+            currentFilter = currentFilter === "official" ? "all" : "official";
+            updateFilter();
+        });
+    
+    // add text for official langauge in legend
     legend.append("text")
         .attr("x", 30)
         .attr("y", 40)
@@ -275,8 +305,10 @@ d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/w
 
     const sizeValues = [10, 50, 100];
 
+    // make the size scale match the size of circles on map
     const sizeScale = d => d / 35 + 0.5;
 
+    // add circles to legend indicating size of points on map
     legend.selectAll(".size-circle")
         .data(sizeValues)
         .join("circle")
@@ -284,9 +316,9 @@ d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/w
         .attr("cx", 20)
         .attr("cy", (d, i) => 65 + i * 20)
         .attr("r", d => sizeScale(d))
-        .attr("fill", "none")
-        .attr("stroke", "black");
-        
+        .attr("fill", "black");
+    
+    // add text to legend indicating percents
     legend.selectAll(".size-text")
         .data(sizeValues)
         .join("text")
@@ -314,10 +346,11 @@ d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/w
     svg.call(zoom.transform, transform)
 });
 
-// Add pop up bar chart
+// add pop up bar chart
+
 function showBarChart(event, d) {
     document.body.classList.add("modal-open");
-
+    // create overlay to dim the rest of the screen when the pop up is active
     overlay
         .style("left", "0px")
         .style("top", "0px")
@@ -344,16 +377,19 @@ function showBarChart(event, d) {
     // Clear any previous popup content
     popup.html("");
 
+    // declare popup dimensions
     const popupWidth = 350;
     const popupHeight = 250;
     const margin = { top: 20, right: 10, bottom: 40, left: 75 };
 
-
+    // svg for popup
     const svgPopup = popup.append("svg")
         .attr("width", popupWidth)
         .attr("height", popupHeight)
         .style("z-index", 10);
 
+
+    // scales for bar graph
     const y = d3.scaleBand()
         .domain(data.map(d => d.language))
         .range([margin.top, popupHeight - margin.bottom])
@@ -364,7 +400,7 @@ function showBarChart(event, d) {
         .nice()
         .range([margin.left, popupWidth - margin.right]);
 
-    // Bars
+    // bars for bar graph
     svgPopup.selectAll("rect")
         .data(data)
         .join("rect")
@@ -392,19 +428,19 @@ function showBarChart(event, d) {
         .duration(600)
         .attr("width", d => x(d.value) - margin.left);
 
-    // X axis
+    // x axis
     svgPopup.append("g")
         .attr("transform", `translate(0,${popupHeight - margin.bottom})`)
         .call(d3.axisBottom(x).ticks(5).tickSize(0))
         .call(g => g.select(".domain").remove());
 
-    // Y axis
+    // y axis
     svgPopup.append("g")
         .attr("transform", `translate(${margin.left},0)`)
         .call(d3.axisLeft(y).tickSize(0))
         .call(g => g.select(".domain").remove())
 
-    // Title
+    // title
     svgPopup.append("text")
         .attr("x", popupWidth / 2)
         .attr("y", 15)
@@ -412,7 +448,7 @@ function showBarChart(event, d) {
         .attr("font-family", "sans-serif")
         .text(d.country);
 
-    // Show popup
+    // show popup
     popup
         .style("left", "50%")
         .style("top", "50%")

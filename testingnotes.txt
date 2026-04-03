@@ -1,0 +1,13 @@
+I conducted testing with a classmate from another class. This classmate is not in CS or SDS so I thought that they would give me good user insights on my system as a tool for the general public.
+
+1. Two specific analysis tasks I could ask someone to do with my system:
+    a. Identify a country where a large percentage of the speakers do not speak an official language as their native langauge. 
+    b. What is the second most 
+
+2. As my classmate performed these tasks, they first started struggling because they couldn't figure out how to zoom in and out, but they caught on to dragging the map around and clicking on the points very quickly. They intuitivley figured out that to exit the bar chart "pop up", they needed to click anywhere on the page off of it. 
+
+At first they also expected the size of the points to correlate to the number of speakers in each country (and not the percentage). This would have been interesting to implement but languages like China would appear huge and smaller languages (like Hungarian for example) would almost disappear completely.
+
+One piece of feedback they gave was the the circles on the legend stayed the same size, while the circles on the map changed size as you zoomed in and out, which made the legend a little useless as you zoomed in. This was something I wanted to implement but struggled to do so in terms of both the point sizing as well as the point placement so they wouldn't be overlapped or too spread out.
+
+3. One reasonable adjustment was adding +, - buttons that act as intuitive zoom in and out buttons to indicate that this map was interactive and the buttons can be a little more predictable than trackpad gestures. I think it works as a good indicator that the map is interactive as when you first see it you could think it's static. In addition to the buttons, I also added directions on how to interact with this map underneath it.
