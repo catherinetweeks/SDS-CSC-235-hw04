@@ -35,7 +35,7 @@ const zoom = d3.zoom()
 const popup = d3.select("body")
     .append("div")
     .attr("id", "popup")
-    .style("position", "absolute")
+    .style("position", "fixed")
     .style("background", "white")
     .style("padding", "15px")
     .style("border-radius", "8px")
@@ -75,7 +75,7 @@ const langtip = d3.select("body")
 const overlay = d3.select("body")
     .append("div")
     .attr("id", "overlay")
-    .style("position", "absolute")
+    .style("position", "fixed")
     .style("background", "rgba(0,0,0,0.2)")
     .style("opacity", 0)
     .style("pointer-events", "none")
@@ -124,6 +124,8 @@ svg.on("click", function(event) {
         overlay
             .style("opacity", 0)
             .style("pointer-events", "none");
+
+        document.body.classList.remove("modal-open");
     }
 });
 
@@ -314,13 +316,13 @@ d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/w
 
 // Add pop up bar chart
 function showBarChart(event, d) {
-    const newrect = svg.node().getBoundingClientRect();
+    document.body.classList.add("modal-open");
 
     overlay
-        .style("left", newrect.left + "px")
-        .style("top", newrect.top + "px")
-        .style("width", newrect.width + "px")
-        .style("height", newrect.height + "px")
+        .style("left", "0px")
+        .style("top", "0px")
+        .style("width", "100vw")
+        .style("height", "100vh")
         .style("opacity", 1)
         .style("pointer-events", "all")
         .style("z-index", 5) // blocks map interaction
@@ -329,6 +331,7 @@ function showBarChart(event, d) {
                 .style("pointer-events", "none"); // disable blocking of map interaction when popup is not active
             overlay.style("opacity", 0)
                 .style("pointer-events", "none");
+        document.body.classList.remove("modal-open");
 });
 
     const data = d.allLanguages.map(l => ({
@@ -410,11 +413,10 @@ function showBarChart(event, d) {
         .text(d.country);
 
     // Show popup
-    const rect = svg.node().getBoundingClientRect();
-
     popup
-        .style("left", (rect.left + (rect.width / 2) - (popupWidth / 2)) + "px")
-        .style("top", (rect.top + (rect.height / 2) - (popupHeight / 2)) + "px")
+        .style("left", "50%")
+        .style("top", "50%")
+        .style("transform", "translate(-50%, -50%)")
         .style("opacity", 1)
         .style("pointer-events", "all");
 }
